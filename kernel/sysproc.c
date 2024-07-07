@@ -38,7 +38,8 @@ sys_wait(void)
   return wait(p);
 }
 
-uint64
+//delete
+/*uint64
 sys_sbrk(void)
 {
   int addr;
@@ -49,6 +50,22 @@ sys_sbrk(void)
   addr = myproc()->sz;
   if(growproc(n) < 0)
     return -1;
+  return addr;
+}*/
+
+uint64
+sys_sbrk(void)
+{
+  int addr;
+  int n;
+  struct proc *p = myproc();
+
+  if(argint(0, &n) < 0)
+    return -1;
+  addr = p->sz;
+  if(n < 0)
+    uvmdealloc(p->pagetable, p->sz, p->sz + n); //just sign addr alloc
+  p->sz += n;
   return addr;
 }
 
