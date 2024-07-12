@@ -5,6 +5,11 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "sleeplock.h"
+#include "fs.h"
+#include "file.h"
+#include "vma.h"
+#include "fcntl.h"
 
 struct cpu cpus[NCPU];
 
@@ -260,6 +265,13 @@ growproc(int n)
   return 0;
 }
 
+int
+lazy_grow_proc(int n){
+  struct proc *p = myproc();
+  p->sz = p->sz + n;
+  return 0;
+}
+
 // Create a new process, copying the parent.
 // Sets up child kernel stack to return as if from fork() system call.
 int
@@ -280,6 +292,19 @@ fork(void)
     release(&np->lock);
     return -1;
   }
+
+  for(int i = 0; i < NOFILE; i++){
+    if(p->areaps[i]){
+      np->areaps[i] = vma_alloc();
+      np->areaps[i]->addr = p->areaps[i]->addr;
+      np->areaps[i]->length = p->areaps[i]->length;
+      np->areaps[i]->prot = p->areaps[i]->prot;
+      np->areaps[i]->flags = p->areaps[i]->flags;
+      np->areaps[i]->file = p->areaps[i]->file;
+      filedup(p->areaps[i]->file);                        
+    }
+  }
+
   np->sz = p->sz;
 
   np->parent = p;
@@ -343,6 +368,24 @@ exit(int status)
 
   if(p == initproc)
     panic("init exiting");
+
+  for(int i = 0; i < NOFILE; i++){
+    if(p->areaps[i]){
+      struct vm_area_struct *vmap = p->areaps[i];
+      if(vmap->prot & PROT_WRITE && vmap->flags == MAP_SHARED){
+        begin_op();
+        ilock(vmap->file->ip);
+        writei(vmap->file->ip, 1, (uint64)vmap->addr, 0, vmap->length);
+        iunlock(vmap->file->ip);
+        end_op();
+      }
+      fileclose(vmap->file);
+      vma_free(vmap);
+      p->areaps[i] = 0;
+    }
+  }
+
+
 
   // Close all open files.
   for(int fd = 0; fd < NOFILE; fd++){
