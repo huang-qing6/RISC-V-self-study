@@ -97,7 +97,6 @@ sys_uptime(void)
   return xticks;
 }
 
-
 //trace sys
 uint64
 sys_trace(void){
