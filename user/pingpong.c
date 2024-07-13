@@ -5,8 +5,7 @@
 #define WR 1 //pipe write
 
 int main(int argc,char const *argv){
-    char buf = 'P';
-
+    char buf = 'p';
     int fd_c2p[2]; //子进程->父进程
     int fd_p2c[2]; //父进程->子进程
     pipe(fd_c2p);
@@ -61,9 +60,7 @@ int main(int argc,char const *argv){
 
         close(fd_c2p[RD]);
         close(fd_p2c[WR]);
-
         exit(exit_status);
     }
-
 
 }
