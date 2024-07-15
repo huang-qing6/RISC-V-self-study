@@ -46,7 +46,13 @@ int main(int argc,char const *argv[]){
     int p[2];
     pipe(p);
     
-    for(int i = 2; i <= 35; i++)
+    if(argc < 2){
+        fprintf(2,"usage: primes nums");
+        exit(1);
+    }
+
+    int n = atoi(argv[1]);
+    for(int i = 2; i <= n; i++)
         write(p[WR], &i, INT_LEN);
 
     if(fork() == 0){
