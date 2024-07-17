@@ -75,7 +75,6 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(1);
-    printf("%s\n",ecmd->argv[0]);
     exec(ecmd->argv[0], ecmd->argv);
     fprintf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
@@ -83,7 +82,6 @@ runcmd(struct cmd *cmd)
   case REDIR:
     rcmd = (struct redircmd*)cmd;
     close(rcmd->fd);
-    printf("%s\n", rcmd->file); //sh 执行到这里
     if(open(rcmd->file, rcmd->mode) < 0){
       fprintf(2, "open %s failed\n", rcmd->file);
       exit(1);
@@ -148,7 +146,6 @@ main(void)
 {
   static char buf[100];
   int fd;
-
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
     if(fd >= 3){
@@ -156,7 +153,7 @@ main(void)
       break;
     }
   }
-
+  printf("start\n");
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
@@ -169,7 +166,6 @@ main(void)
     if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait(0);
-    printf("pid over!\n");
   }
   exit(0);
 }
@@ -438,6 +434,7 @@ parseexec(char **ps, char *es)
     if(tok != 'a')
       panic("syntax");
     cmd->argv[argc] = q;
+    printf("%s\n", q);
     cmd->eargv[argc] = eq;
     argc++;
     if(argc >= MAXARGS)
@@ -468,6 +465,7 @@ nulterminate(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     for(i=0; ecmd->argv[i]; i++)
       *ecmd->eargv[i] = 0;
+
     break;
 
   case REDIR:
