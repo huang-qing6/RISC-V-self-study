@@ -4,7 +4,9 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-void find(char *path, const char *filename)
+int match(char*, char*);
+
+void find(char *path, char *filename)
 {
   char buf[512], *p;
   int fd;
@@ -39,6 +41,11 @@ void find(char *path, const char *filename)
   while (read(fd, &de, sizeof de) == sizeof de) {
     if (de.inum == 0)
       continue;
+    
+    /*char *q;
+    q = 0;
+    memmove(q, de.name, DIRSIZ);
+    q[DIRSIZ] = '\0';*/
     memmove(p, de.name, DIRSIZ); //添加路径名称
     p[DIRSIZ] = '\0';               //字符串结束标志
     if (stat(buf, &st) < 0) {
@@ -48,7 +55,7 @@ void find(char *path, const char *filename)
     //不要在“.”和“..”目录中递归
     if (st.type == T_DIR && strcmp(p, ".") != 0 && strcmp(p, "..") != 0) {
       find(buf, filename);
-    } else if (strcmp(filename, p) == 0)
+    } else if (strcmp(filename, p) == 0) /*if(match(filename, q))*/
       printf("%s\n", buf);
   }
 

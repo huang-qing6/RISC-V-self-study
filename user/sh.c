@@ -135,6 +135,7 @@ getcmd(char *buf, int nbuf)
 {
   fprintf(2, "$ ");
   memset(buf, 0, nbuf);
+  //printf("buf: %s\n", buf);
   gets(buf, nbuf);
   if(buf[0] == 0) // EOF
     return -1;
@@ -153,7 +154,6 @@ main(void)
       break;
     }
   }
-  printf("start\n");
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
@@ -434,7 +434,7 @@ parseexec(char **ps, char *es)
     if(tok != 'a')
       panic("syntax");
     cmd->argv[argc] = q;
-    printf("%s\n", q);
+    //printf("%s\n", q);
     cmd->eargv[argc] = eq;
     argc++;
     if(argc >= MAXARGS)
