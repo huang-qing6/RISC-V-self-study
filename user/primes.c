@@ -16,7 +16,7 @@ int lpipe_first_data(int lpipe[2], int *dst){
 
 void transmit_data(int lpipe[2],int rpipe[2],int first){
     int data;
-    while(read(lpipe[RD], &data, sizeof(int))==sizeof(int)){
+    while(read(lpipe[RD], &data, sizeof(int)) != 0){
         if(data % first)
             write(rpipe[WR],&data,sizeof(int));
     }

@@ -133,9 +133,12 @@ runcmd(struct cmd *cmd)
 int
 getcmd(char *buf, int nbuf)
 {
+  if(buf == 0){}
+  
   fprintf(2, "$ ");
-  memset(buf, 0, nbuf);
   //printf("buf: %s\n", buf);
+  
+  memset(buf, 0, nbuf);
   gets(buf, nbuf);
   if(buf[0] == 0) // EOF
     return -1;
@@ -147,6 +150,7 @@ main(void)
 {
   static char buf[100];
   int fd;
+
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
     if(fd >= 3){
@@ -154,6 +158,7 @@ main(void)
       break;
     }
   }
+
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
@@ -183,7 +188,6 @@ fork1(void)
   int pid;
 
   pid = fork();
-
   if(pid == -1)
     panic("fork");
   return pid;
@@ -434,7 +438,6 @@ parseexec(char **ps, char *es)
     if(tok != 'a')
       panic("syntax");
     cmd->argv[argc] = q;
-    //printf("%s\n", q);
     cmd->eargv[argc] = eq;
     argc++;
     if(argc >= MAXARGS)
@@ -465,7 +468,6 @@ nulterminate(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     for(i=0; ecmd->argv[i]; i++)
       *ecmd->eargv[i] = 0;
-
     break;
 
   case REDIR:
