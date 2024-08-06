@@ -7,6 +7,25 @@
 #include "syscall.h"
 #include "defs.h"
 
+/*
+// copy from sysfile.c
+static int
+argfd(int n, int *pfd, struct file **pf)
+{
+  int fd;
+  struct file *f;
+
+  if(argint(n, &fd) < 0)
+    return -1;
+  if(fd < 0 || fd >= NOFILE || (f=myproc()->ofile[fd]) == 0)
+    return -1;
+  if(pfd)
+    *pfd = fd;
+  if(pf)
+    *pf = f;
+  return 0;
+}*/
+
 // Fetch the uint64 at addr from the current process.
 int
 fetchaddr(uint64 addr, uint64 *ip)
@@ -159,6 +178,83 @@ static char *syscalls_name[] = {
 [SYS_sysinfo] "sysinfo",
 };
 
+/** a0-a6 参数选择
+ *  0 无参
+ *  1 argint
+ *  2 argaddr
+ *  3 argfd
+ *  4 argstr
+ */
+static int syscalls_argv[] = {
+[SYS_fork]    000000,
+[SYS_exit]    000000,
+[SYS_wait]    000123,
+[SYS_pipe]    000000,
+[SYS_read]    000002,
+[SYS_kill]    000001,
+[SYS_exec]    000024,
+[SYS_fstat]   000023,
+[SYS_chdir]   000004,
+[SYS_dup]     000003,
+[SYS_getpid]  000000,
+[SYS_sbrk]    000001,
+[SYS_sleep]   000001,
+[SYS_uptime]  000000,
+[SYS_open]    000014,
+[SYS_write]   000123,
+[SYS_mknod]   000114,
+[SYS_unlink]  000004,
+[SYS_link]    000044,
+[SYS_mkdir]   000004,
+[SYS_close]   000003,
+[SYS_trace]   000000,
+[SYS_sysinfo] 000002,
+};
+
+// 带修缮
+void check_arg(int num){
+  int arg_sum = syscalls_argv[num];
+
+  if(arg_sum == 0){
+    printf("no args!");
+    return;
+  }
+
+  int idx = 0;
+  int p;
+  uint64 addr;
+  //struct file *f;
+  char path[MAXPATH];
+
+  while(arg_sum != 0){
+    int tmp = arg_sum%10;
+    arg_sum /= 10;
+    switch (tmp)
+    {
+    case 1:
+      argint(idx, &p);
+      printf("arg%d: %d ", idx, p);
+      break;
+    case 2:
+      argaddr(idx, &addr);
+      printf("arg%d: %d ", idx, addr);
+    case 3:
+      /*argfd(idx, 0, &f);
+      printf("arg%d: %d ", idx, f->ref);*/
+      break;
+    case 4:
+      argstr(idx, path, MAXPATH);
+      printf("arg%d: %s ", idx, path);
+      break;      
+    default:
+      break;
+    }
+    idx++;
+  }
+
+  return;
+}
+
 void
 syscall(void)
 {
@@ -167,12 +263,16 @@ syscall(void)
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    p->trapframe->a0 = syscalls[num]();
+    
 
+    // 根据追踪的函数调用触发
+    if((1 << num) & p->trace_mask){
+      printf("%d: syscall %s -> %d，",p->pid, syscalls_name[num], p->trapframe->a0);
+      check_arg(num);
+      printf("\n");
+    }
 
-    // pi pei xitong
-    if((1 << num) & p->trace_mask)
-      printf("%d: syscall %s -> %d\n",p->pid, syscalls_name[num], p->trapframe->a0);
+    p->trapframe->a0 = syscalls[num](); 
   } else {
     printf("%d %s: unknown sys call %d\n",
             p->pid, p->name, num);

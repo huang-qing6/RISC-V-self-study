@@ -128,7 +128,7 @@ usertrapret(void)
   ((void (*)(uint64,uint64))fn)(TRAPFRAME, satp);
 }
 
-// interrupts and exceptions from kernel code go here via kernelvec,
+// interrupts and exceptions from kernel code g127  o here via kernelvec,
 // on whatever the current kernel stack is.
 void 
 kerneltrap()

@@ -86,7 +86,7 @@ enum procstate { UNUSED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 struct proc {
   struct spinlock lock;
 
-  //add new syscall
+  // syscall para
   int trace_mask; //sys_trace arg
 
   // p->lock must be held when using these:
