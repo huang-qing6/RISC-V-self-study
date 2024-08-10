@@ -113,7 +113,7 @@ uartputc(int c)
 // to echo characters. it spins waiting for the uart's
 // output register to be empty.
 void
-uartputc_sync(int c)
+uartputc_sync(int c) //直接跳过了从缓存读取，在他之前进行输出
 {
   push_off();
 
@@ -156,7 +156,7 @@ uartstart()
     // maybe uartputc() is waiting for space in the buffer.
     wakeup(&uart_tx_r);
     
-    WriteReg(THR, c);
+    WriteReg(THR, c); // 输出buf中(char)c到console
   }
 }
 

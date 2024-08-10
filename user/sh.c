@@ -135,7 +135,7 @@ getcmd(char *buf, int nbuf)
 {
   if(buf == 0){}
   
-  fprintf(2, "$ ");
+  fprintf(4, "$ ");
   //printf("buf: %s\n", buf);
   
   memset(buf, 0, nbuf);
