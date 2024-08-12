@@ -108,8 +108,6 @@ void            yield(void);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
-void            uvmlazytouch(uint64);
-int             uvmshouldtouch(uint64);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
@@ -162,8 +160,8 @@ int             uartgetc(void);
 // vm.c
 void            kvminit(void);
 void            kvminithart(void);
-uint64          kvmpa(pagetable_t, uint64);
-void            kvmmap(pagetable_t, uint64, uint64, uint64, int);
+uint64          kvmpa(uint64);
+void            kvmmap(uint64, uint64, uint64, int);
 int             mappages(pagetable_t, uint64, uint64, uint64, int);
 pagetable_t     uvmcreate(void);
 void            uvminit(pagetable_t, uchar *, uint);
@@ -180,11 +178,6 @@ uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
-int             vmprint(pagetable_t pagetable); // 添加函数声明
-pagetable_t     kvminit_newpgtbl(void);
-int             kvmcopymappings(pagetable_t, pagetable_t, uint64, uint64);
-uint64          kvmdealloc(pagetable_t, uint64, uint64);
-pte_t*          walk(pagetable_t, uint64, int);
 
 // plic.c
 void            plicinit(void);
@@ -230,7 +223,3 @@ int             sockread(struct sock *, uint64, int);
 int             sockwrite(struct sock *, uint64, int);
 void            sockrecvudp(struct mbuf*, uint32, uint16, uint16);
 #endif
-
-//vmcopyin
-int copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);
-int copyinstr_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max);
