@@ -403,7 +403,8 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 int
 copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {
-  if(uvmshouldtouch(srcva)){
+  int i = uvmshouldtouch(srcva);
+  if(i){
     uvmlazytouch(srcva);
   }
 
@@ -469,27 +470,27 @@ kvm_free_kernelpgtbl(pagetable_t pagetable)
   kfree((void*)pagetable); // 释放当前级别页表所占用空间
 }
 
-// 将 src 页表的一部分页映射关系拷贝到 dst 页表中。
+// 将用户页表的一部分页映射关系拷贝到内核页表中。
 // 只拷贝页表项，不拷贝实际的物理页内存。
 // 成功返回0，失败返回 -1
 int
-kvmcopymappings(pagetable_t src, pagetable_t dst, uint64 start, uint64 sz)
+kvmcopymappings(pagetable_t pagetable, pagetable_t kpagetable, uint64 oldsz, uint64 len)
 {
   pte_t *pte;
   uint64 pa, i;
   uint flags;
 
   // PGROUNDUP: prevent re-mapping already mapped pages (eg. when doing growproc)
-  for(i = PGROUNDUP(start); i < start + sz; i += PGSIZE){
-    if((pte = walk(src, i, 0)) == 0)
+  for(i = PGROUNDUP(oldsz); i < oldsz + len; i += PGSIZE){
+    if((pte = walk(pagetable, i, 0)) == 0)
       panic("kvmcopymappings: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("kvmcopymappings: page not present");
     pa = PTE2PA(*pte);
-    // `& ~PTE_U` 表示将该页的权限设置为非用户页
+    // `& ~PTE_U` 表示将该页的权限设置为非用户页 
     // 必须设置该权限，RISC-V 中内核是无法直接访问用户页的。
     flags = PTE_FLAGS(*pte) & ~PTE_U;
-    if(mappages(dst, i, PGSIZE, pa, flags) != 0){
+    if(mappages(kpagetable, i, PGSIZE, pa, flags) != 0){
       goto err;
     }
   }
@@ -498,8 +499,8 @@ kvmcopymappings(pagetable_t src, pagetable_t dst, uint64 start, uint64 sz)
 
  err:
   // thanks @hdrkna for pointing out a mistake here.
-  // original code incorrectly starts unmapping from 0 instead of PGROUNDUP(start)
-  uvmunmap(dst, PGROUNDUP(start), (i - PGROUNDUP(start)) / PGSIZE, 0);
+  // original code incorrectly starts unmapping from 0 instead of PGROUNDUP(oldsz)
+  uvmunmap(kpagetable, PGROUNDUP(oldsz), (i - PGROUNDUP(oldsz)) / PGSIZE, 0);
   return -1;
 }
 
@@ -512,7 +513,7 @@ kvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
     return oldsz;
 
   if(PGROUNDUP(newsz) < PGROUNDUP(oldsz)){
-    int npages = (PGROUNDUP(oldsz) - PGROUNDUP(newsz)) / PGSIZE;
+    int npages = (PGROUNDUP(oldsz) - PGROUNDUP(newsz)) / PGSIZE; //要删掉的页表大小
     uvmunmap(pagetable, PGROUNDUP(newsz), npages, 0);
   }
 

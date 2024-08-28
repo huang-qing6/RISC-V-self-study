@@ -290,6 +290,7 @@ growproc(int n)
     // 内核页表中的映射同步缩小
     sz = kvmdealloc(p->kpagetable, sz, sz + n);
   }
+  //p->lazysz = n;
   p->sz = sz;
   return 0;
 }
@@ -764,9 +765,10 @@ void uvmlazytouch(uint64 va) {
       kfree(mem);
       p->killed = 1;
     }
-    kvmcopymappings(p->pagetable, p->kpagetable, p->sz-(4096/PGSIZE), (4096/PGSIZE)); //同步扩大出错，need fix
+    //同步扩大出错，need fix
+    //kvmcopymappings(p->pagetable, p->kpagetable, p->lazysz, PGSIZE); 
+
   }
-  // printf("lazy alloc: %p, p->sz: %p\n", PGROUNDDOWN(va), p->sz);
 }
 
 // whether a page is previously lazy-allocated and needed to be touched before use.

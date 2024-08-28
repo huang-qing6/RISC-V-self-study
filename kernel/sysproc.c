@@ -48,13 +48,14 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = p->sz;
+
   /*if(growproc(n) < 0)
     return -1;*/
   if(n < 0){ // 若减小页表数立刻执行
     uvmalloc(p->pagetable, p->sz, p->sz+n);
     kvmdealloc(p->kpagetable, p->sz, p->sz+n);
   }
-    
+  p->lazysz = p->sz;  
   p->sz += n; //只改变了技术大小不实际改变内存
 
   return addr;
