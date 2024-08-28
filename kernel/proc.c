@@ -766,7 +766,7 @@ void uvmlazytouch(uint64 va) {
       p->killed = 1;
     }
     //同步扩大出错，need fix
-    //kvmcopymappings(p->pagetable, p->kpagetable, p->lazysz, PGSIZE); 
+    kvmcopymappings(p->pagetable, p->kpagetable, p->lazysz, PGSIZE); 
 
   }
 }
