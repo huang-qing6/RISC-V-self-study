@@ -27,13 +27,13 @@ void transmit_data(int lpipe[2],int rpipe[2],int first){
 void primes(int lpipe[2]){
     close(lpipe[WR]);
     int first;
-    if(lpipe_first_data(lpipe,&first) == 0){
+    if(lpipe_first_data(lpipe, &first) == 0){
         int p[2];
         pipe(p);
-        transmit_data(lpipe,p,first);
+        transmit_data(lpipe, p, first);
 
-        if(fork() == 0){
-            primes(p); //will create a new process
+        if(fork() == 0){ //will create a new process
+            primes(p);
         }else{
             close(p[RD]);
             wait(0);
